@@ -8,22 +8,56 @@
 int create_domain_socket(int domain, int stream_type, int protocol);
 void bind_socket(struct sockaddr_un *addr, int sockfd, char path[]);
 
+void handle_signal(int sig) {
+    printf("\nReceived signal %d, cleaning up...\n", sig);
+    unlink("./tmp/socket");
+    exit(EXIT_SUCCESS);
+}
+
 int main()
 {
     struct sockaddr_un addr;
     int sockfd;
-    char path[] = "/tmp/socket";
+    char path[] = "../socket";
 
     sockfd = create_domain_socket(AF_UNIX, SOCK_STREAM, 0);
     bind_socket(&addr, sockfd, path);
 
-    while (listen(sockfd, 5) != -1)
+    if (listen(sockfd, 5) == -1)
+    {
+        perror("Listen");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Server listening on %s\n", path);
+
+    
+    int exitflag = 1;
+    char *response_message = "Received message";
+
+    while (1)
     {
         int clientfd = accept(sockfd, NULL, NULL);
-
         if (clientfd == -1)
         {
-            perror("accept");
+            perror("Accept");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Client connected\n");
+
+        char buffer[128];
+        ssize_t bytes = recv(clientfd, buffer, sizeof(buffer) - 1, 0);
+
+        if (bytes > 0)
+        {
+            buffer[bytes] = '\0';
+            printf("Received message: %s\n", buffer);
+        }
+        
+        if (send(clientfd, response_message, strlen(response_message), 0) == -1)
+        {
+            perror("Send");
             exit(EXIT_FAILURE);
         }
     }
@@ -53,7 +87,7 @@ void bind_socket(struct sockaddr_un *addr, int sockfd, char path[])
 
     if (bind(sockfd, (struct sockaddr *)addr, sizeof(*addr)) == -1)
     {
-        perror("bind");
+        perror("Bind");
         exit(EXIT_FAILURE);
     }
 
