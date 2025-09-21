@@ -8,9 +8,10 @@
 int create_domain_socket(int domain, int stream_type, int protocol);
 void bind_socket(struct sockaddr_un *addr, int sockfd, char path[]);
 
-void handle_signal(int sig) {
+void handle_signal(int sig)
+{
     printf("\nReceived signal %d, cleaning up...\n", sig);
-    unlink("./tmp/socket");
+    unlink("../socket");
     exit(EXIT_SUCCESS);
 }
 
@@ -31,7 +32,6 @@ int main()
 
     printf("Server listening on %s\n", path);
 
-    
     int exitflag = 1;
     char *response_message = "Received message";
 
@@ -54,7 +54,7 @@ int main()
             buffer[bytes] = '\0';
             printf("Received message: %s\n", buffer);
         }
-        
+
         if (send(clientfd, response_message, strlen(response_message), 0) == -1)
         {
             perror("Send");
@@ -92,4 +92,31 @@ void bind_socket(struct sockaddr_un *addr, int sockfd, char path[])
     }
 
     return;
+}
+
+char *encrypt_ceaser_salad(char message[], int shift)
+{
+    for (int i = 0; message[i] != '\0'; i++)
+    {
+        char shifted = shift_char(message[i], shift);
+        message[i] = shifted;
+    }
+
+    return message;
+}
+
+char shift_char(char character, int shift)
+{
+    int mod = ((shift % 26) + 26) % 26;
+
+    if (character >= 'a' && character <= 'z')
+    {
+        return (char)('a' + ((character - 'a' + mod) % 26));
+    }
+    else if (character >= 'A' && character <= 'Z')
+    {
+        return (char)('A' + ((character - 'A' + mod) % 26));
+    }
+
+    return character;
 }
