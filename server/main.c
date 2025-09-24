@@ -5,6 +5,10 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+void handle_exit(void);
+void manage_arguments(int argc, char *argv[], char **socket_path);
+void error_message(char *message);
+int valid_path(char *path);
 int create_domain_socket(int domain, int stream_type, int protocol);
 void bind_socket(struct sockaddr_un *addr, int sockfd, char path[]);
 void start_listening(int sockfd, int capacity);
@@ -16,26 +20,12 @@ void send_message(int sockfd, char *message);
 
 char *path;
 
-void handle_exit(void)
-{
-    unlink(path);
-    exit(0);
-}
-
 int main(int argc, char *argv[])
 {
     atexit(handle_exit);
 
-    // check for too many or too little cmd arguments
-    if (argc != 2)
-    {
-        fprintf(stderr,
-                "Usage: %s <socket path>\n", argv[0]);
-        return -1;
-    }
-
-    // add cmd arg to var
-    path = argv[1];
+    // validate and manage arguments
+    manage_arguments(argc, argv, &path);
 
     struct sockaddr_un addr;
     int sockfd;
@@ -102,6 +92,43 @@ int main(int argc, char *argv[])
 
     // in case while loop does not run, unlink socket
     unlink(path);
+}
+
+void handle_exit(void)
+{
+    unlink(path);
+    exit(0);
+}
+
+void manage_arguments(int argc, char *argv[], char **socket_path)
+{
+    if (argc != 2)
+    {
+        error_message("not enough arguments.\n");
+    }
+
+    if (valid_path(argv[1]) != 1)
+    {
+        error_message("socket path must be valid.");
+    }
+
+    *socket_path = argv[1];
+}
+
+int valid_path(char *path)
+{
+    if (access(path, F_OK) == 0)
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+void error_message(char *message)
+{
+    fprintf(stderr, "%s\nUsage: <message> <shift> <socket_path>\n", message);
+    exit(EXIT_FAILURE);
 }
 
 int create_domain_socket(int domain, int stream_type, int protocol)

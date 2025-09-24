@@ -5,6 +5,9 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+void manage_argument(int argc, char *argv[], char **message, int *shift, char **socket_path);
+int valid_path(char* path);
+void error_message(char *message);
 int create_domain_socket(int domain, int stream_type, int protocol);
 void connect_to_domain_socket(int sockfd, struct sockaddr_un *address, char *path);
 void send_message(int sockfd, char *message);
@@ -12,18 +15,14 @@ char *encrypt_ceaser_salad(char message[], int shift);
 char *decrypt_ceaser_salad(char message[], int shift);
 char shift_char(char character, int shift);
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-    // check for too many or too little cmd arguments
-    if (argc != 4) {
-        fprintf(stderr, "Usage: %s <message> <shift> <socket_path>\n", argv[0]);
-        return -1;
-    }
-
-    // place args in correct vars
-    char *message = argv[1]; 
-    int shift = atoi(argv[2]);
-    char *path = argv[3];
+    char *message;
+    int shift;
+    char *path;
+    
+    // validate and manage arguments
+    manage_argument(argc, argv, &message, &shift, &path);
 
     struct sockaddr_un addr;
 
@@ -31,7 +30,7 @@ int main(int argc, char* argv[])
     int sockfd = create_domain_socket(AF_UNIX, SOCK_STREAM, 0);
     connect_to_domain_socket(sockfd, &addr, path);
 
-    // encrypt message 
+    // encrypt message
     char *encrypted_message = encrypt_ceaser_salad(message, shift);
     // format message so it can also receive shift value
     char message_with_shift[128];
@@ -46,11 +45,45 @@ int main(int argc, char* argv[])
     printf("Received message: %s\n", recieved_message);
 
     // decrypt the message
-    char* decrypted_message = decrypt_ceaser_salad(recieved_message, shift);
+    char *decrypted_message = decrypt_ceaser_salad(recieved_message, shift);
     printf("Message decrypted: %s\n", decrypted_message);
 
     // close socket
     close(sockfd);
+}
+
+void manage_argument(int argc, char *argv[], char **message, int *shift, char **socket_path)
+{
+    if (argc != 4)
+    {
+        error_message("Not enough arguments.");
+    }
+
+    if (sscanf(argv[2], "%d", shift) != 1) {
+
+        error_message("shift must be an integer.");
+    }
+
+    if (valid_path(*socket_path) != 1) {
+        error_message("socket path must be valild.");
+    }
+
+    *message = argv[1];
+    *socket_path = argv[3];
+}
+
+int valid_path(char* path) {
+    if (access(path, F_OK) == 0) {
+        return 1;
+    } 
+    
+    return 0;
+}
+
+void error_message(char *message)
+{
+    fprintf(stderr, "%s\nUsage: <message> <shift> <socket_path>\n", message);
+    exit(EXIT_FAILURE);
 }
 
 int create_domain_socket(int domain, int stream_type, int protocol)

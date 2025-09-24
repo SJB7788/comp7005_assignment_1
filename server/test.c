@@ -1,5 +1,10 @@
 #include <stdio.h>
+#include <sys/socket.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/un.h>
+#include <unistd.h>
+
 
 char shift_char(char character, int shift)
 {
@@ -39,31 +44,23 @@ char* decrypt_ceaser_salad(char message[], int shift)
     return message;
 }
 
-int get_shift_from_message(char message[]) {
-    char shift[16];
+void parse_arg(int argc, char* argv[], char** test, int* test_num) {
+    if(sscanf(argv[1], "%s", *test) != 1) {
+        printf("err: 1");
+    };
 
-    for (int i = 0; message[i] != ' '; i++)
-    {
-        shift[i] = message[i];    
+    if (sscanf(argv[2], "%d", test_num) != 1) {
+        printf("err 2");
     }
 
-    printf("%s\n", shift);
-
-    return (int) shift;
-    
+    printf("%s %d\n", *test, *test_num);
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-    char test[] = "21 I Love Honey";
-    int shift = 21;
-
-    printf("%d\n", get_shift_from_message(test));
-
-    char *res = encrypt_ceaser_salad(test, shift);
-    printf("%s\n", res);
-    char *decrypt = decrypt_ceaser_salad(res, shift);
-    printf("%s\n", decrypt);
+    int test;
+    char* test_char;
+    parse_arg(argc, argv, &test_char, &test);
 }
 
 // A - Z (65 - 90)
