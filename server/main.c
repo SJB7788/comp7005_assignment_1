@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
         char received_message[128];
 
         // receive message and store it
+        // ssize_t bytes = recieve_message(clientfd, &received_message);
         ssize_t bytes = recv(clientfd, received_message, sizeof(received_message) - 1, 0);
 
         // if message is valid
@@ -80,12 +81,11 @@ int main(int argc, char *argv[])
             char copied_buffer[128];
             strcpy(copied_buffer, message);
 
-            // decrypt the encrypted message
-            char *decrypted_message = decrypt_ceaser_salad(copied_buffer, shift);
+            // encrypt message and send
+            char* encrypted_message = encrypt_ceaser_salad(copied_buffer, shift);
+            send_message(clientfd, encrypted_message);
         }
 
-        // send message back to client
-        send_message(clientfd, received_message);
         // close client
         close(clientfd);
     }
@@ -127,7 +127,7 @@ int valid_path(char *path)
 
 void error_message(char *message)
 {
-    fprintf(stderr, "%s\nUsage: <message> <shift> <socket_path>\n", message);
+    fprintf(stderr, "%s\nUsage: <socket_path>\n", message);
     exit(EXIT_FAILURE);
 }
 

@@ -29,15 +29,13 @@ int main(int argc, char *argv[])
     // create and connect to domain socket
     int sockfd = create_domain_socket(AF_UNIX, SOCK_STREAM, 0);
     connect_to_domain_socket(sockfd, &addr, path);
-
-    // encrypt message
-    char *encrypted_message = encrypt_ceaser_salad(message, shift);
     // format message so it can also receive shift value
-    char message_with_shift[128];
-    snprintf(message_with_shift, sizeof(message_with_shift), "%s %d", message, shift);
+    char full_message[128];
+    snprintf(full_message, sizeof(full_message), "%s %d", message, shift);
+    printf("%s\n", full_message);
 
     // send message and print message
-    send_message(sockfd, message_with_shift);
+    send_message(sockfd, full_message);
 
     // receive message from server
     char recieved_message[128];
@@ -64,12 +62,13 @@ void manage_argument(int argc, char *argv[], char **message, int *shift, char **
         error_message("shift must be an integer.");
     }
 
-    if (valid_path(*socket_path) != 1) {
+    if (valid_path(argv[3]) != 1) {
         error_message("socket path must be valild.");
     }
 
     *message = argv[1];
     *socket_path = argv[3];
+
 }
 
 int valid_path(char* path) {
