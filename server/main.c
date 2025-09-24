@@ -104,7 +104,7 @@ void manage_arguments(int argc, char *argv[], char **socket_path)
 {
     if (argc != 2)
     {
-        error_message("not enough arguments.\n");
+        error_message("not enough / too many arguments.\n");
     }
 
     if (valid_path(argv[1]) != 1)

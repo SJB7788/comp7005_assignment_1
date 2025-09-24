@@ -32,7 +32,6 @@ int main(int argc, char *argv[])
     // format message so it can also receive shift value
     char full_message[128];
     snprintf(full_message, sizeof(full_message), "%s %d", message, shift);
-    printf("%s\n", full_message);
 
     // send message and print message
     send_message(sockfd, full_message);
@@ -54,7 +53,7 @@ void manage_argument(int argc, char *argv[], char **message, int *shift, char **
 {
     if (argc != 4)
     {
-        error_message("Not enough arguments.");
+        error_message("Not enough / too many arguments.");
     }
 
     if (sscanf(argv[2], "%d", shift) != 1) {
